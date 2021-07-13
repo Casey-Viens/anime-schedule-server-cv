@@ -8,7 +8,7 @@ const { Sequelize, Op, Model, DataTypes } = require("sequelize");
 const app = express();
 
 // create two user ids stored in cookies
-    // active and searched
+// active and searched
 // if searched is null then use active
 // searched can be id or name ...will need logic for that
 // https://anilist.github.io/ApiV2-GraphQL-Docs/
@@ -64,7 +64,7 @@ async function getAnimeLinks(id) {
     let animeMap = new Map();
 
     animes.forEach(anime => {
-        animeMap.set(anime.AnimeID, {animeLink: anime.link})
+        animeMap.set(anime.AnimeID, { animeLink: anime.link })
     });
 
     return animeMap;
@@ -74,7 +74,7 @@ sync();
 console.log("Model successfully built and synced.")
 
 
-app.use(cors({ origin: "http://localhost:5000", credentials: true }))
+app.use(cors({ origin: process.env.CLIENT_HOST, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -117,8 +117,8 @@ app.get('/login', function (req, res) {
             request('https://graphql.anilist.co', 'POST', body, headers)
                 .then(user => {
                     res.cookie('userID', user);
-                    console.log("Obtained UserID\n",user)
-                    res.redirect('http://localhost:5000');
+                    console.log("Obtained UserID\n", user)
+                    res.redirect(process.env.CLIENT_HOST);
                 })
         })
 })
@@ -181,9 +181,9 @@ app.get('/animeSchedule', function (req, res) {
             getAnimeLinks(req.cookies.userID.data.Viewer.id).then((databaseAnime) => {
                 // loop through anilist anime
                 for (alAnime in anilistAnime[0].entries) {
-                    if(databaseAnime.has(anilistAnime[0].entries[alAnime].mediaId)){
+                    if (databaseAnime.has(anilistAnime[0].entries[alAnime].mediaId)) {
                         anilistAnime[0].entries[alAnime].link = databaseAnime.get(anilistAnime[0].entries[alAnime].mediaId).animeLink
-                    }else{
+                    } else {
                         anilistAnime[0].entries[alAnime].link = "#";
                     }
                 }

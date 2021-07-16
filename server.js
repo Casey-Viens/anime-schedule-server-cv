@@ -175,20 +175,27 @@ app.get('/animeSchedule', function (req, res) {
     }
     request('https://graphql.anilist.co', 'POST', body, headers)
         .then(anilist => {
+            console.log(anilist)
             // clean anime
             anilistAnime = anilist.data.MediaListCollection.lists;
             // select all anime in database
-            getAnimeLinks(req.cookies.userID.data.Viewer.id).then((databaseAnime) => {
-                // loop through anilist anime
-                for (alAnime in anilistAnime[0].entries) {
-                    if (databaseAnime.has(anilistAnime[0].entries[alAnime].mediaId)) {
-                        anilistAnime[0].entries[alAnime].link = databaseAnime.get(anilistAnime[0].entries[alAnime].mediaId).animeLink
-                    } else {
-                        anilistAnime[0].entries[alAnime].link = "#";
+            if (anilistAnime.length === 0) {
+                res.json("Account has no anime")
+            } else if (anilistAnime[0].entries[0].status != "CURRENT") {
+                res.json("Account has no currently watching anime")
+            } else {
+                getAnimeLinks(req.cookies.userID.data.Viewer.id).then((databaseAnime) => {
+                    // loop through anilist anime
+                    for (alAnime in anilistAnime[0].entries) {
+                        if (databaseAnime.has(anilistAnime[0].entries[alAnime].mediaId)) {
+                            anilistAnime[0].entries[alAnime].link = databaseAnime.get(anilistAnime[0].entries[alAnime].mediaId).animeLink
+                        } else {
+                            anilistAnime[0].entries[alAnime].link = "#";
+                        }
                     }
-                }
-                res.json(anilistAnime);
-            })
+                    res.json(anilistAnime);
+                })
+            }
         })
 })
 // consider merging routes and doing logic within routes depending on body before making requests

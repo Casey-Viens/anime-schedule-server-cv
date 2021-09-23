@@ -127,35 +127,42 @@ app.get('/login', function (req, res) {
 app.get('/animeSchedule', function (req, res) {
     console.log("animeSchedule request");
     let query =
-        `query($userID: Int, $status_in: [MediaListStatus]){
-            MediaListCollection(userId: $userID, status_in: $status_in, type: ANIME) {
-            lists{
-                entries{
-                    id,
-                    mediaId,
-                    status,
-                    progress,
-                    score(format: POINT_100),
-                    media{
-                        title {
-                            romaji
-                            english
-                        },
-                        episodes,
-                            coverImage {
-                            extraLarge
-                            color
-                        },
-                        nextAiringEpisode{
-                            airingAt,
-                                timeUntilAiring,
-                                episode
-                        },
-                    }
-                }
+        `query ($userID: Int) {
+            current: MediaListCollection(userId: $userID, status_in: [CURRENT], type: ANIME) {
+              ...listFields
             }
-        }
-    }`;
+            completed: MediaListCollection(userId: $userID, status_in: [COMPLETED], type: ANIME) {
+              ...listFields
+            }
+          }
+          
+          fragment listFields on MediaListCollection {
+            lists {
+              entries {
+                id
+                mediaId
+                status
+                progress
+                score(format: POINT_100)
+                media {
+                  title {
+                    romaji
+                    english
+                  }
+                  episodes
+                  coverImage {
+                    extraLarge
+                    color
+                  }
+                  nextAiringEpisode {
+                    airingAt
+                    timeUntilAiring
+                    episode
+                  }
+                }
+              }
+            }
+          }`;
 
     let variables = {
         userID: req.cookies.userID.data.Viewer.id,
@@ -177,20 +184,22 @@ app.get('/animeSchedule', function (req, res) {
         .then(anilist => {
             console.log(anilist)
             // clean anime
-            anilistAnime = anilist.data.MediaListCollection.lists;
+            anilistAnime = anilist.data;
+            // anilistAnime.current.lists[0].entries
+            // anilistAnime.completed.lists[0].entries
             // select all anime in database
             if (anilistAnime.length === 0) {
                 res.json("Account has no anime")
-            } else if (anilistAnime[0].entries[0].status != "CURRENT") {
+            } else if (anilistAnime.current.lists[0].entries[0].status != "CURRENT") {
                 res.json("Account has no currently watching anime")
             } else {
                 getAnimeLinks(req.cookies.userID.data.Viewer.id).then((databaseAnime) => {
                     // loop through anilist anime
-                    for (alAnime in anilistAnime[0].entries) {
-                        if (databaseAnime.has(anilistAnime[0].entries[alAnime].mediaId)) {
-                            anilistAnime[0].entries[alAnime].link = databaseAnime.get(anilistAnime[0].entries[alAnime].mediaId).animeLink
+                    for (alAnime in anilistAnime.current.lists[0].entries) {
+                        if (databaseAnime.has(anilistAnime.current.lists[0].entries[alAnime].mediaId)) {
+                            anilistAnime.current.lists[0].entries[alAnime].link = databaseAnime.get(anilistAnime.current.lists[0].entries[alAnime].mediaId).animeLink
                         } else {
-                            anilistAnime[0].entries[alAnime].link = "#";
+                            anilistAnime.current.lists[0].entries[alAnime].link = "#";
                         }
                     }
                     res.json(anilistAnime);

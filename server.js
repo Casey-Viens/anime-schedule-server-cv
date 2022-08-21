@@ -47,7 +47,7 @@ async function sync() {
 
 async function upsertAnimeLink(userID, animeID, link) {
     const anime = await AnimeLink.upsert({ UserID: userID, AnimeID: animeID, link: link });
-    console.log(anime);
+    // console.log(anime);
 }
 
 async function getAnimeLink(id, link) {
@@ -174,7 +174,7 @@ app.get('/animeSchedule', function (req, res) {
         variables: variables
     });
 
-    console.log(req.cookies);
+    // console.log(req.cookies);
     const headers = {
         'Authorization': 'Bearer ' + req.cookies.token.access_token,
         'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ app.get('/animeSchedule', function (req, res) {
     }
     request('https://graphql.anilist.co', 'POST', body, headers)
         .then(anilist => {
-            console.log(anilist)
+            // console.log(anilist)
             // clean anime
             anilistAnime = anilist.data;
             // anilistAnime.current.lists[0].entries
@@ -210,13 +210,13 @@ app.get('/animeSchedule', function (req, res) {
 // consider merging routes and doing logic within routes depending on body before making requests
 app.post('/setAnimeLink', function (req, res) {
     console.log("set Anime Link Request");
-    console.log(req.body);
+    // console.log(req.body);
     upsertAnimeLink(req.cookies.userID.data.Viewer.id, req.body.id, req.body.link).then(res.send("Anime Link Updated"));
 })
 
 app.post('/updateAnime', function (req, res) {
     console.log("Updating Anime...");
-    console.log(req.body);
+    // console.log(req.body);
 
     let query =
         `mutation($id: Int, $progress: Int, $status: MediaListStatus, $score: Float){
@@ -250,4 +250,4 @@ app.post('/updateAnime', function (req, res) {
 })
 
 
-app.listen(3000)
+app.listen(process.env.PORT)
